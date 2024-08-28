@@ -14,11 +14,7 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # Limit file size to 16 MB
 
 @app.route('/')
 def main():
-    return "<h1>SimiScan Flask Server Start!</h1>"
-
-@app.route('/scan', methods=["GET"])
-def get_scan():
-    return "Hello Scanner"
+    return "<h1>SimiScan Flask Server is Running!</h1>"
 
 @app.route('/scan', methods=["POST"])
 def compare_signature():
@@ -45,23 +41,26 @@ def compare_signature():
     original_image.save(original_image_path)
 
     # Process images (placeholder)
-    data = {
-        'ScannedImagePath': scanned_image_path,
-        'OriginalImagePath': original_image_path,
-    }
+    # data = {
+    #     'ScannedImagePath': scanned_image_path,
+    #     'OriginalImagePath': original_image_path,
+    # }
 
     # Get the current date and time
     tz = pytz.timezone('Asia/Manila')
     utc_now = datetime.utcnow().replace(tzinfo=pytz.utc)
     local_time = utc_now.astimezone(tz)
     
-    result = compare_images(scanned_image_path, original_image_path)
+    # result = compare_images(scanned_image_path, original_image_path)
+    similarity_index, threshold_result, confidence_result = compare_images(scanned_image_path, original_image_path)
+
 
     return jsonify({
         'Scanned Image' : scanned_image_path,
         'Original Image' : original_image_path,
-        'Result' : result,
-        'DateTime' : local_time
+        'Similarity Index' : similarity_index,
+        'Threshold' : threshold_result,
+        'Confidence' : confidence_result,
     })
 
 if __name__ == '__main__':

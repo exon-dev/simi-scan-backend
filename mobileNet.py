@@ -8,6 +8,7 @@ from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.layers import GlobalAveragePooling2D
 from tensorflow.keras.preprocessing.image import img_to_array
 from scipy.spatial.distance import cosine
+from threshold import run_threshold
 
 # Set the directory
 HOME = os.getcwd()
@@ -31,6 +32,19 @@ def create_mobilenet_v3_small_feature_extractor():
 
 mobilenet_v3_small_feature_extractor = create_mobilenet_v3_small_feature_extractor()
 
+def calculate_confidence_value(percentage_similarity, threshold):
+    """
+    Calculate the confidence value based on percentage similarity and a threshold.
+    """
+    # Ensure threshold is valid (less than 100)
+    if threshold >= 100:
+        raise ValueError("Threshold must be less than 100.")
+    
+    # Calculate confidence value
+    confidence_value = max(0, (percentage_similarity - threshold) / (100 - threshold)) * 100
+    return confidence_value
+
+
 def preprocess_image(img_path):
     img = cv2.imread(img_path)
     img = cv2.resize(img, (128, 128))
@@ -51,6 +65,12 @@ def compare_images(img1_path, img2_path):
     similarity_score = cosine(features1, features2)
     
     # Convert similarity score to percentage
-    percentage_similarity = (1 - similarity_score) * 100
+    similarity_index = (1 - similarity_score) * 100
+
+    # similarity_index = percentage_similarity
+
+    threshold_result = run_threshold(img1_path, img2_path)
+
+    confidence_result = calculate_confidence_value(similarity_index, threshold_result)
     
-    return f"{percentage_similarity:.2f}"
+    return similarity_index, threshold_result, confidence_result
