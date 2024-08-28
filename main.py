@@ -3,8 +3,10 @@ from mobileNet import compare_images
 from werkzeug.utils import secure_filename
 from datetime import datetime
 import pytz
-
+import base64
 import os
+
+from middleware import is_authenticated
 
 app = Flask(__name__)
 
@@ -20,49 +22,61 @@ def main():
 def get_scan():
     return "Hello Scanner"
 
+"""
+    Sample API Request:
+    
+    POST /scan
+    
+    header: {
+        "Authorization": "Bearer <token>"
+    }
+    body: {
+        "original_signature": "base64_encoded_image",
+        "scanned_signature": "base64_encoded_image",
+    }
+"""
+
 @app.route('/scan', methods=["POST"])
 def compare_signature():
+    req = request.get_json()
 
-    # Check if the POST request has files
-    if 'scanned_image' not in request.files or 'original_image' not in request.files:
-        return jsonify({'error': 'No file part'}), 400
+    is_valid, error_response = is_authenticated()
+    if not is_valid:
+        return error_response
+       
+    original_signature = req.get('original_signature')
+    scanned_signature = req.get('scanned_signature')
 
-    scanned_image = request.files['scanned_image']
-    original_image = request.files['original_image']
+    if not original_signature or not scanned_signature:
+        return jsonify({'Error': 'Images not provided'}), 400
 
-    # Check if images are provided
-    if scanned_image.filename == '' or original_image.filename == '':
-        return jsonify({'error': 'No selected file'}), 400
+    # decode base64 image to original image data
+    original_img_data = base64.b64decode(original_signature)
+    scanned_img_data = base64.b64decode(scanned_signature)
 
-    # Ensure the upload folder exists
-    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+    original_image_path = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename('original_signature.png'))
+    scanned_image_path = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename('scanned_signature.png'))
 
-    # Save the files
-    scanned_image_path = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(scanned_image.filename))
-    original_image_path = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(original_image.filename))
-    
-    scanned_image.save(scanned_image_path)
-    original_image.save(original_image_path)
+    with open(original_image_path, 'wb') as f:
+        f.write(original_img_data)
 
-    # Process images (placeholder)
-    data = {
-        'ScannedImagePath': scanned_image_path,
-        'OriginalImagePath': original_image_path,
-    }
+    with open(scanned_image_path, 'wb') as f:
+        f.write(scanned_img_data)
 
-    # Get the current date and time
     tz = pytz.timezone('Asia/Manila')
-    utc_now = datetime.utcnow().replace(tzinfo=pytz.utc)
-    local_time = utc_now.astimezone(tz)
-    
+    utc_now = datetime.timestamp(datetime.now())
+    local_time = utc_now.astimezone(tz) 
+
     result = compare_images(scanned_image_path, original_image_path)
 
     return jsonify({
-        'Scanned Image' : scanned_image_path,
-        'Original Image' : original_image_path,
-        'Result' : result,
-        'DateTime' : local_time
+        'Scanned Image': scanned_image_path,
+        'Original Image': original_image_path,
+        'Result': result,
+        'DateTime': local_time,
     })
 
 if __name__ == '__main__':
+    if not os.path.exists(app.config['UPLOAD_FOLDER']):
+        os.makedirs(app.config['UPLOAD_FOLDER'])
     app.run(debug=True)
