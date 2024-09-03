@@ -107,3 +107,4 @@ new_image_path = 'realSample.png'
 new_features = extract_features(new_image_path)
 prediction = svm_model.predict([new_features])
 print('Prediction (0: genuine, 1: forged):', prediction[0])
+# a 
