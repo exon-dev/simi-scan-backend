@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
-from mobileNet import compare_images
+# from mobileNet import compare_images
+from image_comparator import compare_images
 from werkzeug.utils import secure_filename
 from datetime import datetime
 import pytz
@@ -40,12 +41,6 @@ def compare_signature():
     scanned_image.save(scanned_image_path)
     original_image.save(original_image_path)
 
-    # Process images (placeholder)
-    # data = {
-    #     'ScannedImagePath': scanned_image_path,
-    #     'OriginalImagePath': original_image_path,
-    # }
-
     # Get the current date and time
     tz = pytz.timezone('Asia/Manila')
     utc_now = datetime.utcnow().replace(tzinfo=pytz.utc)
@@ -61,6 +56,7 @@ def compare_signature():
         'Similarity Index': round(similarity_index, 2),
         'Threshold': round(threshold_result, 2),
         'Confidence': round(confidence_result, 2),
+        'Date' : local_time
     })
 
 if __name__ == '__main__':

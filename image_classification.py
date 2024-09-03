@@ -6,6 +6,7 @@ from sklearn.metrics import accuracy_score
 import cv2
 import os
 import joblib
+import sys
 
 # Load pre-trained MobileNetV3 model without top layers
 base_model = tf.keras.applications.MobileNetV3Small(weights='imagenet', include_top=False, input_shape=(224, 224, 3))
@@ -65,46 +66,50 @@ def load_dataset(genuine_dir, forged_dir, validation_dir=None):
 
     return np.array(features), np.array(labels)
 
-# Load dataset
-genuine_dir = 'dataset/train/genuine'
-forged_dir = 'dataset/train/forged'
-validation_dir = 'dataset/validation'  # Path to the validation directory
-features, labels = load_dataset(genuine_dir, forged_dir, validation_dir)
 
-# Split dataset into training and testing sets
-X_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=0.2, random_state=42)
+def get_confidence(image_path):
+    # Load dataset
+    genuine_dir = 'dataset/train/genuine'
+    forged_dir = 'dataset/train/forged'
+    validation_dir = 'dataset/validation'  
+    features, labels = load_dataset(genuine_dir, forged_dir, validation_dir)
 
-# Split training data into training and validation sets
-X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.2, random_state=42)
+    # Split dataset into training and testing sets
+    X_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=0.2, random_state=42)
 
-model_path = 'svm_model.pkl'
+    # Split training data into training and validation sets
+    X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.2, random_state=42)
 
-if os.path.exists(model_path):
-    # Load the trained model
-    svm_model = joblib.load(model_path)
-    print('Loaded saved model.')
-else:
-    # Train SVM model
-    svm_model = svm.SVC(kernel='linear', C=1)
-    svm_model.fit(X_train, y_train)
+    model_path = 'svm_model.pkl'
 
-    # Save the trained model
-    joblib.dump(svm_model, model_path)
-    print('Trained and saved model.')
+    if os.path.exists(model_path):
+        # Load the trained model
+        svm_model = joblib.load(model_path)
+        print('Loaded saved model.')
+    else:
+        # Train SVM model
+        svm_model = svm.SVC(kernel='linear', C=1)
+        svm_model.fit(X_train, y_train)
 
-# Validate the model
-y_val_pred = svm_model.predict(X_val)
-val_accuracy = accuracy_score(y_val, y_val_pred)
-print(f'Validation Accuracy: {val_accuracy:.2f}')
+        # Save the trained model
+        joblib.dump(svm_model, model_path)
+        print('Trained and saved model.')
 
-# Predict on the test set
-y_test_pred = svm_model.predict(X_test)
-test_accuracy = accuracy_score(y_test, y_test_pred)
-print(f'Test Accuracy: {test_accuracy:.2f}')
+    # Validate the model
+    y_val_pred = svm_model.predict(X_val)
+    val_accuracy = accuracy_score(y_val, y_val_pred)
+    print(f'Validation Accuracy: {val_accuracy:.2f}')
 
-# Predict on new images (example)
-new_image_path = 'realSample.png'
-new_features = extract_features(new_image_path)
-prediction = svm_model.predict([new_features])
-print('Prediction (0: genuine, 1: forged):', prediction[0])
-# a 
+    # Predict on the test set
+    y_test_pred = svm_model.predict(X_test)
+    test_accuracy = accuracy_score(y_test, y_test_pred)
+    print(f'Test Accuracy: {test_accuracy:.2f}')
+
+    # Predict on the new image
+    new_features = extract_features(image_path)
+    prediction = svm_model.predict([new_features])
+    print('Prediction (0: genuine, 1: forged):', prediction[0])
+    confidence_result = val_accuracy
+    return confidence_result
+
+
