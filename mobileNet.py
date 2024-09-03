@@ -60,6 +60,11 @@ def extract_features(img_path):
 def compare_images(img1_path, img2_path):
     features1 = extract_features(img1_path)
     features2 = extract_features(img2_path)
+
+    
+    genuine_dir = 'dataset/train/genuine'
+    forged_dir = 'dataset/train/forged'
+    validation_dir = 'dataset/validation'
     
     # Calculate similarity score
     similarity_score = cosine(features1, features2)
@@ -72,5 +77,6 @@ def compare_images(img1_path, img2_path):
     threshold_result = run_threshold(img1_path, img2_path)
 
     confidence_result = calculate_confidence_value(similarity_index, threshold_result)
-    
+    # confidence_result = calculate_confidence_value(similarity_index, threshold_result)
+
     return similarity_index, threshold_result, confidence_result
