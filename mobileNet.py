@@ -4,7 +4,7 @@ import cv2
 import tensorflow as tf
 from tensorflow.keras.applications import MobileNetV3Small
 from tensorflow.keras.applications.mobilenet_v3 import preprocess_input
-from tensorflow.keras.models import Model, load_model
+from tensorflow.keras.models import load_model, Model
 from tensorflow.keras.layers import GlobalAveragePooling2D
 from tensorflow.keras.preprocessing.image import img_to_array
 from scipy.spatial.distance import cosine
@@ -15,7 +15,8 @@ HOME = os.getcwd()
 print(f"Working directory: {HOME}")
 
 # Define the path to save the model
-model_save_path = os.path.join(HOME, 'mobilenet_v3_small_feature_extractor.keras')
+# Define the path to save the model
+model_save_path = os.path.join(HOME, 'mobilenet_v3_small_feature_extractor.h5')
 # model_save_path = os.path.join(HOME, 'mobilenet_v3_small_feature_extractor.h5')
 
 # Create MobileNetV3Small model for feature extraction
@@ -61,11 +62,6 @@ def compare_images(img1_path, img2_path):
     features1 = extract_features(img1_path)
     features2 = extract_features(img2_path)
 
-    
-    genuine_dir = 'dataset/train/genuine'
-    forged_dir = 'dataset/train/forged'
-    validation_dir = 'dataset/validation'
-    
     # Calculate similarity score
     similarity_score = cosine(features1, features2)
     

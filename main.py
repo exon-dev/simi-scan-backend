@@ -1,15 +1,16 @@
 from flask import Flask, request, jsonify
-# from mobileNet import compare_images
+from flask_cors import CORS
 from image_comparator import compare_images
 from werkzeug.utils import secure_filename
 from datetime import datetime
 import pytz
 import base64
 import os
-
-from middleware import is_authenticated
+import logging
 
 app = Flask(__name__)
+
+CORS(app)
 
 # Upload folder configuration
 app.config['UPLOAD_FOLDER'] = 'uploads'  
@@ -20,8 +21,6 @@ def main():
     return "<h1>SimiScan Flask Server is Running!</h1>"
 
 """
-    Sample API Request:
-    
     POST /scan
     
     header: {
@@ -33,49 +32,53 @@ def main():
     }
 """
 
+logging.basicConfig(level=logging.INFO)
+
 @app.route('/scan', methods=["POST"])
 def compare_signature():
     req = request.get_json()
 
-    is_valid, error_response = is_authenticated()
-    if not is_valid:
-        return error_response
-       
     original_signature = req.get('original_signature')
     scanned_signature = req.get('scanned_signature')
 
     if not original_signature or not scanned_signature:
-        return jsonify({'Error': 'Images not provided'}), 400
+        return jsonify({'Error': 'Both original and scanned signatures must be provided'}), 400
 
-    # decode base64 image to original image data
-    original_img_data = base64.b64decode(original_signature)
-    scanned_img_data = base64.b64decode(scanned_signature)
+    try:
+        original_img_data = base64.b64decode(original_signature)
+        scanned_img_data = base64.b64decode(scanned_signature)
 
-    original_image_path = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename('original_signature.png'))
-    scanned_image_path = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename('scanned_signature.png'))
+        timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+        original_image_path = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(f'original_signature_{timestamp}.png'))
+        scanned_image_path = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(f'scanned_signature_{timestamp}.png'))
 
-    with open(original_image_path, 'wb') as f:
-        f.write(original_img_data)
+        with open(original_image_path, 'wb') as f:
+            f.write(original_img_data)
 
-    # Get the current date and time
-    tz = pytz.timezone('Asia/Manila')
-    utc_now = datetime.utcnow().replace(tzinfo=pytz.utc)
-    local_time = utc_now.astimezone(tz)
-    
-    # result = compare_images(scanned_image_path, original_image_path)
-    similarity_index, threshold_result, confidence_result = compare_images(scanned_image_path, original_image_path)
+        with open(scanned_image_path, 'wb') as f:
+            f.write(scanned_img_data)
 
+        tz = pytz.timezone('Asia/Manila')
+        utc_now = datetime.utcnow().replace(tzinfo=pytz.utc)
+        local_time = utc_now.astimezone(tz)
 
-    return jsonify({
-        'Scanned Image' : scanned_image_path,
-        'Original Image' : original_image_path,
-        'Similarity Index': round(similarity_index, 2),
-        'Threshold': round(threshold_result, 2),
-        'Confidence': round(confidence_result, 2),
-        'Date' : local_time
-    })
+        #confidence_result
+        similarity_index, threshold_result = compare_images(scanned_image_path, original_image_path)
+
+        return jsonify({
+            'similarity_idx': round(similarity_index, 2),
+            'threshold_val': round(threshold_result, 2),
+            # 'Confidence': round(confidence_result, 2),
+            'date': local_time.strftime('%Y-%m-%d %H:%M:%S')
+        })
+
+    except Exception as e:
+        logging.error(f'Error occurred: {str(e)}')
+        return jsonify({'Error': f'An error occurred: {str(e)}'}), 500
+
 
 if __name__ == '__main__':
+    # Ensure the upload directory exists
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
         os.makedirs(app.config['UPLOAD_FOLDER'])
-    app.run(debug=True)
+    app.run(host='192.168.1.7', port=5000, debug=True)
