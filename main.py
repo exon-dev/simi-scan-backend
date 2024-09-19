@@ -73,7 +73,8 @@ def compare_signature():
         'Similarity Index': round(similarity_index, 2),
         'Threshold': round(threshold_result, 2),
         'Confidence': round(confidence_result, 2),
-        'Date' : local_time
+        'Date' : local_time,
+        # 'Prediction' :
     })
 
 if __name__ == '__main__':
