@@ -48,6 +48,7 @@ def compare_signature():
     
     # result = compare_images(scanned_image_path, original_image_path)
     similarity_index, threshold_result, confidence_result = compare_images(scanned_image_path, original_image_path)
+    # similarity_index, threshold_result, confidence_result = compare_images(scanned_image_path, original_image_path)
 
 
     return jsonify({

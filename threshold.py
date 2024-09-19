@@ -66,6 +66,6 @@ def run_threshold(image1_path, image2_path, threshold_value=30, display_scale=0.
     diff = compute_difference(image1, image2)
     thresholded_diff = apply_threshold(diff, threshold_value)
     result = calculate_threshold_result(thresholded_diff)
-    # show_images(diff, thresholded_diff, display_scale)
+    show_images(diff, thresholded_diff, display_scale)
     save_thresholded_image(thresholded_diff)
     return result
