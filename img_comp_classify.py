@@ -37,7 +37,7 @@ print(f"Working directory: {HOME}")
 # Define the path to save/load the PyTorch MobileNetV3 model and SVM classifier
 model_save_path = os.path.join(HOME, 'model_package/mobilenet_v3_small_feature_extractor.pth')
 svm_model_path = os.path.join(HOME, 'model_package/svm_classifier.pkl')
-model_accuracy_data = os.path.join(HOME, 'model_package/result.json')
+model_accuracy_data = os.path.join(HOME, 'model_package/data.json')
 
 # Define the transformation for input images
 transform = transforms.Compose([
