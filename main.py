@@ -41,7 +41,7 @@ def compare_signature():
     utc_now = datetime.utcnow().replace(tzinfo=pytz.utc)
     local_time = utc_now.astimezone(tz)
     
-    similarity_index, threshold_result, confidence_result, final_result = compare_images(scanned_image_path, original_image_path)
+    similarity_index, threshold_result, confidence_result, final_result = compare_images(original_image_path, scanned_image_path)
 
     return jsonify({
         'Scanned Image': scanned_image_path,
