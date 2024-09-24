@@ -16,6 +16,19 @@ CORS(app)
 app.config['UPLOAD_FOLDER'] = 'uploads'  
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # Limit file size to 16 MB
 
+logging.basicConfig(level=logging.INFO)
+
+@app.before_request
+def log_request_info():
+    logging.info(f"Received {request.method} request for {request.url}")
+    logging.info(f"Request headers: {request.headers}")
+    logging.info(f"Request body: {request.get_data()}")
+
+@app.after_request
+def log_response_info(response):
+    logging.info(f"Response status: {response.status}")
+    return response
+
 @app.route('/')
 def main():
     return "<h1>SimiScan Flask Server is Running!</h1>"
@@ -81,4 +94,6 @@ if __name__ == '__main__':
     # Ensure the upload directory exists
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
         os.makedirs(app.config['UPLOAD_FOLDER'])
-    app.run(host='192.168.1.7', port=5000, debug=True)
+    # change to your ip address
+    # make sure na ang ip address kay gikan sa Wireless LAN adapter Wi-Fi: ipv4 address
+    app.run(host='192.168.1.14', port=5000, debug=False)
