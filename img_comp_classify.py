@@ -52,11 +52,11 @@ Initialize MobileNetV3Small as a feature extractor by removing the classifier la
 load a saved model state if available, or save the model state if not.
 """
 def create_mobilenet_v3_small_feature_extractor():
-    base_model = models.mobilenet_v3_small(pretrained=True)
+    base_model = models.mobilenet_v3_small(weights=models.MobileNet_V3_Small_Weights.DEFAULT)
     base_model.classifier = nn.Identity()  # Remove the classifier layer
 
-    if os.path.exists(model_save_path):
-        base_model.load_state_dict(torch.load(model_save_path))
+    if os.path.exists(model_save_path,):
+        base_model.load_state_dict(torch.load(model_save_path), strict=False)
         print("Loaded model from saved state.")
     else:
         torch.save(base_model.state_dict(), model_save_path)

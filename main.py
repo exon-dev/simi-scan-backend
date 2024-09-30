@@ -4,7 +4,6 @@ from werkzeug.utils import secure_filename
 from datetime import datetime
 
 import pytz
-import base64
 import os
 
 
@@ -36,7 +35,7 @@ def compare_signature():
     original_file.save(original_image_path)
     scanned_file.save(scanned_image_path)
 
-    # Get the current date and time
+    # Get the current date and timem
     tz = pytz.timezone('Asia/Manila')
     utc_now = datetime.utcnow().replace(tzinfo=pytz.utc)
     local_time = utc_now.astimezone(tz)
@@ -44,8 +43,9 @@ def compare_signature():
     similarity_index, threshold_result, confidence_result, final_result = compare_images(original_image_path, scanned_image_path)
 
     return jsonify({
-        'Scanned Image': scanned_image_path,
-        'Original Image': original_image_path,
+        # ====Use only for debugging puposes ===
+        # 'Scanned Image': scanned_image_path,
+        # 'Original Image': original_image_path,
         'Similarity Index': round(similarity_index, 2),
         'Threshold': round(threshold_result, 2),
         'Confidence': round(confidence_result, 2),
