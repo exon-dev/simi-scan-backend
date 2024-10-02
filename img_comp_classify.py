@@ -1,7 +1,6 @@
 from torchvision import models, transforms
 from PIL import Image
 from scipy.spatial.distance import cosine
-from threshold import run_threshold
 
 import json
 import joblib
@@ -59,8 +58,7 @@ def create_mobilenet_v3_small_feature_extractor():
         base_model.load_state_dict(torch.load(model_save_path), strict=False)
         print("Loaded model from saved state.")
     else:
-        torch.save(base_model.state_dict(), model_save_path)
-        print("Saved model state dict.")
+          print("Custom pre-trained model not found.")
 
     base_model.eval()  # Set to evaluation mode
     return base_model
@@ -185,18 +183,15 @@ def compare_images(img1_path, img2_path):
     similarity_score = cosine(features1, features2)
     similarity_index = (1 - similarity_score) * 100
 
-    threshold_result = run_threshold(img1_path, img2_path)
-    # confidence_result = calculate_confidence_value(similarity_index, threshold_result)
     confidence_result = confidence_level(model_accuracy_data)
     final_result = predict_image(img1_path)
 
-    return similarity_index, threshold_result, confidence_result, final_result
+    return similarity_index, confidence_result, final_result
 
 # Uncomment only for debugging (This way you can test the script by running this file)
 # ===== Debugging script =====
 # similarity_index, threshold_result, confidence_result, final_result = compare_images("101output.png", "101output.png")
 # print("Similarity Index:  ", similarity_index)
-# print("Threshold: ", threshold_result)
 # print("Confidence Level: ", confidence_result)
 # print("Final Result: ", final_result)
 # ============================
