@@ -35,7 +35,7 @@ def compare_signature():
     original_file.save(original_image_path)
     scanned_file.save(scanned_image_path)
 
-    # Get the current date and timem
+    # Get the current date and time
     tz = pytz.timezone('Asia/Manila')
     utc_now = datetime.utcnow().replace(tzinfo=pytz.utc)
     local_time = utc_now.astimezone(tz)

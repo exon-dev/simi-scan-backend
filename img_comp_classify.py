@@ -50,7 +50,7 @@ transform = transforms.Compose([
 Initialize MobileNetV3Small as a feature extractor by removing the classifier layer,
 load a saved model state if available, or save the model state if not.
 """
-def create_mobilenet_v3_small_feature_extractor():
+def load_mobileNet_v3_small_feature_extractor():
     base_model = models.mobilenet_v3_small(weights=models.MobileNet_V3_Small_Weights.DEFAULT)
     base_model.classifier = nn.Identity()  # Remove the classifier layer
 
@@ -65,7 +65,7 @@ def create_mobilenet_v3_small_feature_extractor():
 
 
 # Instantiate the MobileNetV3Small feature extractor model, loading or saving its state as necessary
-mobilenet_v3_small_feature_extractor = create_mobilenet_v3_small_feature_extractor()
+mobilenet_v3_small_feature_extractor = load_mobileNet_v3_small_feature_extractor()
 
 
 """
@@ -109,16 +109,6 @@ def extract_features(img_path):
     return features
 
 
-"""
-Calculate the confidence value based on similarity and a threshold.
-"""
-def calculate_confidence_value(percentage_similarity, threshold):
-    if threshold >= 100:
-        raise ValueError("Threshold must be less than 100.")
-    
-    confidence_value = max(0, (percentage_similarity - threshold) / (100 - threshold)) * 100
-    return confidence_value
-
 
 """
 Read accuracy from a JSON file and return it as a percentage.
@@ -132,7 +122,6 @@ def confidence_level(file_path):
     accuracy = data['accuracy']
     
     return round(accuracy * 100, 2) 
-
 
 
 """
