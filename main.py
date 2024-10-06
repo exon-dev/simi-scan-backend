@@ -5,6 +5,8 @@ from datetime import datetime
 
 import pytz
 import os
+import base64
+import logging
 
 
 app = Flask(__name__)
@@ -19,41 +21,50 @@ def main():
 
 @app.route('/scan', methods=["POST"])
 def compare_signature():
-    # Ensure that both files are provided in the form data
-    if 'original_signature' not in request.files or 'scanned_signature' not in request.files:
-        return jsonify({'Error': 'Files not provided'}), 400
+    req = request.get_json()
 
-    # Retrieve the files from the request
-    original_file = request.files['original_signature']
-    scanned_file = request.files['scanned_signature']
+    original_signature = req.get('original_signature')
+    scanned_signature = req.get('scanned_signature')
 
-    # Define file paths
-    original_image_path = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename('original_signature.png'))
-    scanned_image_path = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename('scanned_signature.png'))
+    if not original_signature or not scanned_signature:
+        return jsonify({'Error': 'Both original and scanned signatures must be provided'}), 400
 
-    # Save the uploaded files
-    original_file.save(original_image_path)
-    scanned_file.save(scanned_image_path)
+    try:
+        original_img_data = base64.b64decode(original_signature)
+        scanned_img_data = base64.b64decode(scanned_signature)
 
-    # Get the current date and time
-    tz = pytz.timezone('Asia/Manila')
-    utc_now = datetime.utcnow().replace(tzinfo=pytz.utc)
-    local_time = utc_now.astimezone(tz)
-    
-    similarity_index, confidence_result, final_result = compare_images(scanned_image_path, original_image_path)
+        timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+        original_image_path = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(f'original_signature_{timestamp}.png'))
+        scanned_image_path = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(f'scanned_signature_{timestamp}.png'))
 
-    return jsonify({
+        with open(original_image_path, 'wb') as f:
+            f.write(original_img_data)
+
+        with open(scanned_image_path, 'wb') as f:
+            f.write(scanned_img_data)
+            
+        tz = pytz.timezone('Asia/Manila')
+        utc_now = datetime.utcnow().replace(tzinfo=pytz.utc)
+        local_time = utc_now.astimezone(tz)
+        
+        similarity_index, confidence_result, final_result = compare_images(scanned_image_path, original_image_path)
+        
+        return jsonify({
         # ====Use only for debugging puposes ===
         # 'Scanned Image': scanned_image_path,
         # 'Original Image': original_image_path,
-        'Similarity Index': round(similarity_index, 2),
-        'Confidence': round(confidence_result, 2),
-        'Date': local_time,
-        'Prediction': final_result
-    })
+            'similarity_idx': round(similarity_index, 2),
+            'confidence': round(confidence_result, 2),
+            'date': local_time,
+            'pred': final_result
+        })
+
+    except Exception as e:
+        logging.error(f'Error occurred: {str(e)}')
+        return jsonify({'Error': f'An error occurred: {str(e)}'}), 500
 
 
 if __name__ == '__main__':
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
         os.makedirs(app.config['UPLOAD_FOLDER'])
-    app.run(debug=True)
+    app.run(host='192.168.1.8', port='5000', debug=True)
